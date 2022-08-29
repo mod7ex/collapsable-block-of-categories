@@ -72,12 +72,12 @@ header {
       outline: none;
       border: none;
       flex-grow: 1;
-      padding: 1em;
+      padding: 0.7em;
     }
   }
 
   .header-actions {
-    margin-block: 1em;
+    margin-bottom: 2em;
     @include flex();
     justify-content: space-between;
 
@@ -94,6 +94,7 @@ header {
 
           p {
             font-weight: bold;
+            color: black;
           }
 
           &.save {

@@ -30,13 +30,13 @@ const flipArrow = (e: MouseEvent) => {
       <div class="content">
         <h3>{{ title }}</h3>
 
-        <ul class="dots" v-show="dots">
+        <ul class="dots" v-if="dots">
           <li v-for="color in dots" :key="color" class="dot" :style="{ backgroundColor: `#${color}` }"></li>
         </ul>
 
-        <p class="note">{{ note }}</p>
+        <p class="note" v-if="note">{{ note }}</p>
 
-        <p>{{ content }}</p>
+        <p v-if="content">{{ content }}</p>
       </div>
 
       <div class="actions">
@@ -63,8 +63,8 @@ const flipArrow = (e: MouseEvent) => {
   button {
     &.collapse {
       margin-right: 1em;
-      width: 30px;
-      height: 30px;
+      width: 20px;
+      height: 20px;
       border: 1px solid $second-gray !important;
       border-radius: 50%;
       @include flex();
@@ -87,12 +87,12 @@ const flipArrow = (e: MouseEvent) => {
       @include flex($justify: "flex-start");
 
       h3 {
-        font-size: x-larger;
-        font-weight: 3000;
+        font-size: small;
         margin-right: 1em;
       }
 
       p {
+        font-size: small;
         color: $first-gray;
         margin-right: 1em;
       }
@@ -102,19 +102,18 @@ const flipArrow = (e: MouseEvent) => {
         @include flex();
         .dot {
           border-radius: 50%;
-          width: 11px;
-          height: 11px;
+          width: 9px;
+          height: 9px;
           margin: 0 3px;
-          // background-color: green;
         }
       }
     }
   }
 
   .actions {
-    @include flex($gap: 1em);
+    @include flex();
     button {
-      margin-right: 2em;
+      margin-left: 2em;
 
       &.drag {
         cursor: move; // fallback

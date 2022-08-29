@@ -2,6 +2,9 @@ export enum Colors {
   PINK = "FF238D",
   YELLOW = "FFB800",
   ORANGE = "FF8D23",
+  SKY = "00C2FF",
+  BLUE = "0066FF",
+  GRAY = "8E9CBB",
 }
 
 export const uidGen = (str: string = "") => {

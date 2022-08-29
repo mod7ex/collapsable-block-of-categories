@@ -25,25 +25,23 @@ const data = reactive<Partial<IStructure>[]>([
     id: uid(),
     collapsed: true,
     title: "Обязательные для всех",
-    note: "Обязательный",
     content: "Документы, обязательные для всех сотрудников без исключения",
-    dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
+    dots: [Colors.PINK, Colors.YELLOW, Colors.ORANGE],
     children: [
       {
         id: uid(),
         collapsed: true,
-        title: "Обязательные для всех",
+        title: "Паспорт",
         note: "Обязательный",
-        content: "Документы, обязательные для всех сотрудников без исключения",
-        dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
+        content: "Для всех",
+        dots: [Colors.SKY],
       },
       {
         id: uid(),
         collapsed: true,
-        title: "Обязательные для всех",
+        title: "ИНН",
         note: "Обязательный",
-        content: "Документы, обязательные для всех сотрудников без исключения",
-        dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
+        content: "Для всех",
       },
     ],
   },
@@ -51,46 +49,16 @@ const data = reactive<Partial<IStructure>[]>([
   {
     id: uid(),
     collapsed: true,
-    title: "Обязательные для всех",
-    note: "Обязательный",
-    content: "Документы, обязательные для всех сотрудников без исключения",
-    dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
-    children: [
-      {
-        id: uid(),
-        collapsed: true,
-        title: "Обязательные для всех",
-        note: "Обязательный",
-        content: "Документы, обязательные для всех сотрудников без исключения",
-        dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
-      },
-      {
-        id: uid(),
-        collapsed: true,
-        title: "Обязательные для всех",
-        note: "Обязательный",
-        content: "Документы, обязательные для всех сотрудников без исключения",
-        dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
-      },
-    ],
+    title: "Обязательные для трудоустройства",
+    content: "Документы, без которых невозможно трудоустройство человека на какую бы то ни было должность в компании вне зависимости от граж",
+    children: [],
   },
 
   {
     id: uid(),
     collapsed: true,
-    title: "Обязательные для всех",
-    content: "Документы, обязательные для всех сотрудников без исключения",
-    dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
-    children: [
-      {
-        id: uid(),
-        collapsed: true,
-        title: "Обязательные для всех",
-        note: "Обязательный",
-        content: "Документы, обязательные для всех сотрудников без исключения",
-        dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
-      },
-    ],
+    title: "Специальные",
+    children: [],
   },
 
   {
@@ -100,10 +68,19 @@ const data = reactive<Partial<IStructure>[]>([
       {
         id: uid(),
         collapsed: true,
-        title: "Обязательные для всех",
-        note: "Обязательный",
-        content: "Документы, обязательные для всех сотрудников без исключения",
-        dots: [Colors.ORANGE, Colors.PINK, Colors.YELLOW],
+        title: "Тестовое задание кандидата",
+        content: "Россия, Белоруссия, Украина, администратор филиала, повар-сушист, повар-пиццмейкер, повар горячего цеха",
+      },
+      {
+        id: uid(),
+        collapsed: true,
+        title: "Трудовой договор",
+        dots: [Colors.BLUE, Colors.GRAY],
+      },
+      {
+        id: uid(),
+        collapsed: true,
+        title: "Мед. книжка",
       },
     ],
   },
@@ -158,6 +135,10 @@ const log = async (e: any) => {
 
     &.ghost {
       border-bottom: 3px solid $first-blue;
+
+      .collapse-item {
+        visibility: none;
+      }
     }
   }
 
