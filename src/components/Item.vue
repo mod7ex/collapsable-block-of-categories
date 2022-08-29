@@ -2,14 +2,14 @@
 import { ref } from "vue";
 import { Colors } from "../utils";
 
-const props = withDefaults(defineProps<{ uncategorized?: boolean; title: string; note: string; content: string; dots?: Colors[] | undefined; collapsable?: boolean; modelValue?: boolean }>(), {
+const props = withDefaults(defineProps<{ id?: string | number; title: string; note: string; content: string; dots?: Colors[] | undefined; collapsable?: boolean; modelValue?: boolean }>(), {
   collapsable: false,
   title: "",
   note: "",
   content: "",
   dots: undefined,
   modelValue: true,
-  uncategorized: false,
+  id: "",
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -21,34 +21,31 @@ const flipArrow = (e: MouseEvent) => {
 </script>
 
 <template>
-  <div>
-    <div class="collapse-item" v-if="!uncategorized">
-      <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
-        <img src="../assets/svg/collapse-up.svg" alt="collapse" />
-      </button>
+  <div class="collapse-item" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover.prevent>
+    <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
+      <img src="../assets/svg/collapse-up.svg" alt="collapse" />
+    </button>
 
-      <div class="content">
-        <h3>{{ title }}</h3>
+    <div class="content">
+      <h3>{{ title }}</h3>
 
-        <ul class="dots" v-if="dots">
-          <li v-for="color in dots" :key="color" class="dot" :style="{ backgroundColor: `#${color}` }"></li>
-        </ul>
+      <ul class="dots" v-if="dots">
+        <li v-for="color in dots" :key="color" class="dot" :style="{ backgroundColor: `#${color}` }"></li>
+      </ul>
 
-        <p class="note" v-if="note">{{ note }}</p>
+      <p class="note" v-if="note">{{ note }}</p>
 
-        <p v-if="content">{{ content }}</p>
-      </div>
-
-      <div class="actions">
-        <button class="raw-btn"><img src="../assets/svg/edit.svg" alt="edit" /></button>
-        <button class="raw-btn"><img src="../assets/svg/drop.svg" alt="drop" /></button>
-        <button class="raw-btn drag">
-          <img v-if="false" src="../assets/svg/expand-active.svg" alt="expand" />
-          <img v-else src="../assets/svg/expand.svg" alt="expand" />
-        </button>
-      </div>
+      <p v-if="content">{{ content }}</p>
     </div>
-    <slot />
+
+    <div class="actions">
+      <button class="raw-btn"><img src="../assets/svg/edit.svg" alt="edit" /></button>
+      <button class="raw-btn"><img src="../assets/svg/drop.svg" alt="drop" /></button>
+      <button class="raw-btn drag">
+        <img v-if="false" src="../assets/svg/expand-active.svg" alt="expand" />
+        <img v-else src="../assets/svg/expand.svg" alt="expand" />
+      </button>
+    </div>
   </div>
 </template>
 

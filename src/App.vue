@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Draggable from "vuedraggable";
-import { reactive, ref } from "vue";
+import { reactive, ref, computed } from "vue";
 import { Colors, uidGen } from "./utils";
 import ItemVue from "./components/Item.vue";
 import TheHeader from "./components/TheHeader.vue";
@@ -8,17 +8,6 @@ import TheHeader from "./components/TheHeader.vue";
 const searchPayload = ref("Документы");
 
 const uid = uidGen("app");
-
-interface IStructure {
-  uncategorized: boolean;
-  collapsed: boolean;
-  id: string | number;
-  title: string;
-  note?: string;
-  content: string;
-  dots: Colors[];
-  children: Partial<IStructure>[];
-}
 
 const data = reactive<Partial<IStructure>[]>([
   {
@@ -88,17 +77,49 @@ const data = reactive<Partial<IStructure>[]>([
 
 const reRender = ref(0);
 
-const log = async (e: any) => {
-  const { oldIndex, newIndex } = e;
-  console.log({ oldIndex, newIndex });
+const categories = computed(() => data.filter(({ uncategorized }) => !uncategorized));
+const uncategorizedItems = computed(() => data.filter(({ uncategorized }) => !!uncategorized)[0]);
 
-  let a = data[oldIndex];
-  let b = data[newIndex];
+type TPayload = Partial<{ id: string; parent: string; index: number; parent_index: number; is_child: boolean }>;
 
-  data[newIndex] = a;
-  data[oldIndex] = b;
+const startDrag = (e: DragEvent, payload: TPayload) => {
+  const { id, parent, index, parent_index } = payload;
 
-  reRender.value = Date.now();
+  e.dataTransfer!.dropEffect = "move";
+  e.dataTransfer!.effectAllowed = "move";
+
+  e.dataTransfer!.setData("payload", JSON.stringify({ ...payload, is_child: !!parent }));
+};
+
+const onDrop = (e: DragEvent, payload: TPayload) => {
+  const target_payload = { ...payload, is_child: !!payload.parent };
+
+  const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
+
+  // ***** logic
+
+  if (source_payload.is_child === target_payload.is_child) {
+    if (source_payload.is_child) {
+      let a = data[Number(source_payload.parent_index!)].children![Number(source_payload.index!)];
+      let b = data[Number(target_payload.parent_index!)].children![Number(target_payload.index!)];
+
+      data[Number(source_payload.parent_index!)].children![Number(source_payload.index!)] = b;
+      data[Number(target_payload.parent_index!)].children![Number(target_payload.index!)] = a;
+    } else {
+      const a_i = Number(source_payload.index!);
+      const b_i = Number(target_payload.index!);
+
+      let a = data[a_i];
+      let b = data[b_i];
+
+      data[b_i] = a;
+      data[a_i] = b;
+
+      console.log(b_i, a_i);
+
+      reRender.value = Date.now();
+    }
+  }
 };
 </script>
 
@@ -107,19 +128,38 @@ const log = async (e: any) => {
     <the-header v-model="searchPayload" />
 
     <main :key="reRender">
-      <Draggable item-key="id" v-model="data" group="parent" ghost-class="ghost" class="parent" @end="log">
-        <template #item="{ element, index }">
-          <item-vue v-model="data[index].collapsed" :collapsable="true" :uncategorized="element.uncategorized" :title="element.title" :content="element.content" :class="[`${index}`]" :note="element.note" :id="element.id" :dots="element.dots">
-            <Transition name="slide-fade">
-              <Draggable v-if="!element.collapsed" item-key="id" v-model="data[index].children" group="children" ghost-class="ghost" :class="['children', `h-${data[index].children?.length ?? 0}`, element.uncategorized ? 'uncategorized' : '']">
-                <template #item="{ element }">
-                  <item-vue :title="element.title" :content="element.content" :note="element.note" :dots="element.dots" :id="element.id" />
-                </template>
-              </Draggable>
-            </Transition>
-          </item-vue>
-        </template>
-      </Draggable>
+      <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
+        <item-vue @dragstart="(e) => startDrag(e, { id, index: i })" @drop="(e) => onDrop(e, { id, index: i })" v-model="data[i].collapsed" :collapsable="true" :title="title" :content="content" :note="note" :dots="dots" :id="id" />
+        <Transition name="slide-fade">
+          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="data[i].collapsed">
+            <item-vue
+              v-for="(c, j) in children"
+              @dragstart="(e) => startDrag(e, { parent: id, id: c.id, index: j, parent_index: i })"
+              @drop="(e) => onDrop(e, { parent: id, id: c.id, index: j, parent_index: i })"
+              :key="c.id"
+              :title="c.title"
+              :content="c.content"
+              :note="c.note"
+              :dots="c.dots"
+              :id="c.id"
+            />
+          </div>
+        </Transition>
+      </div>
+
+      <div class="uncategorized">
+        <item-vue
+          v-for="(c, k) in uncategorizedItems.children"
+          :key="c.id"
+          @drop="(e) => onDrop(e, { parent: uncategorizedItems.id, id: c.id, index: k, parent_index: 3 })"
+          @dragstart="(e) => startDrag(e, { parent: uncategorizedItems.id, id: c.id, index: k, parent_index: 3 })"
+          :title="c.title"
+          :content="c.content"
+          :note="c.note"
+          :dots="c.dots"
+          :id="c.id"
+        />
+      </div>
     </main>
   </div>
 </template>
@@ -128,49 +168,30 @@ const log = async (e: any) => {
 #container {
   max-width: $main-width;
   margin: 0 auto;
-
   .children {
     padding-left: 3em;
     overflow: hidden;
-
-    &.ghost {
-      border-bottom: 3px solid $first-blue;
-
-      .collapse-item {
-        visibility: none;
-      }
-    }
   }
-
   .uncategorized {
     padding: 0;
     margin-top: 1.5em;
   }
 }
-
-.ghost {
-  border-bottom: 3px solid $first-blue;
-  box-shadow: 0 0 7px 3px $first-gray;
-}
-
+// *************************Transition
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }
-
 .slide-fade-leave-active {
   transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
 }
-
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   opacity: 0;
   height: 0;
 }
-
 .slide-fade-enter-to {
   @include items;
 }
-
 .slide-fade-leave-from {
   @include items;
 }
