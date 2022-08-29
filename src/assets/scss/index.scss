@@ -1,0 +1,9 @@
+.raw-btn {
+    cursor: pointer;
+    position: relative;
+    background-color: transparent;
+    border: none;
+    &:focus{
+        outline: none;
+    }
+}
