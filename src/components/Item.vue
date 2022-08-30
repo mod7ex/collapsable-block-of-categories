@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { shallowRef } from "vue";
 import { Colors } from "../utils";
 
 const props = withDefaults(
@@ -11,13 +11,14 @@ const props = withDefaults(
     dots?: Colors[] | undefined;
     collapsable?: boolean;
     modelValue?: boolean;
+    index: number;
+    parent_index?: number;
   }>(),
   {
     collapsable: false,
     title: "",
     note: "",
     content: "",
-    dots: undefined,
     modelValue: true,
     id: "",
   }
@@ -30,20 +31,23 @@ const flipArrow = (e: MouseEvent) => {
   (e.currentTarget as HTMLButtonElement).classList.toggle("down");
 };
 
+const draggedOverEl = shallowRef<HTMLElement>();
+
 const over = (e: DragEvent) => {
   e.preventDefault();
   let el = e.target as HTMLElement;
+  draggedOverEl.value = el;
   el.classList.add("border-b");
 };
 
 const leave = (e: DragEvent) => {
   let el = e.target as HTMLElement;
-  el.classList.remove("border-b");
+  draggedOverEl.value?.classList.remove("border-b");
 };
 </script>
 
 <template>
-  <div class="collapse-item" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
+  <div :data-index="index" :data-parent_index="parent_index" class="collapse-item" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
     <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
       <img src="../assets/svg/collapse-up.svg" alt="collapse" />
     </button>
@@ -68,7 +72,7 @@ const leave = (e: DragEvent) => {
         <img class="drag-hide" src="../assets/svg/expand.svg" alt="expand" />
       </button>
     </div>
-    <div :class="['overlay'].concat($attrs.class)"></div>
+    <div @dragenter.prevent @dragover="over" @dragleave="leave" :data-index="index" :data-parent_index="parent_index" :class="['overlay'].concat($attrs.class)"></div>
   </div>
 </template>
 

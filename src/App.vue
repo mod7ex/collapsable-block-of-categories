@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import Draggable from "vuedraggable";
 import { Colors, uidGen } from "./utils";
-import { reactive, ref, computed } from "vue";
+import { reactive, computed, shallowRef } from "vue";
 import ItemVue from "./components/Item.vue";
 import TheHeader from "./components/TheHeader.vue";
 
-const searchPayload = ref("Документы");
+const searchPayload = shallowRef("Документы");
 
 const uid = uidGen("app");
 
@@ -81,45 +81,59 @@ const data = reactive<Partial<IStructure>[]>([
   },
 ]);
 
-const reRender = ref(0);
-
-const mainRef = ref<HTMLDivElement>();
-
 const categories = computed(() => data.filter(({ uncategorized }) => !uncategorized));
 const uncategorizedItems = computed(() => data.filter(({ uncategorized }) => !!uncategorized)[0]);
 
-type TPayload = Partial<{ index: number; parent_index: number; is_child: boolean }>;
+const reRender = shallowRef(0);
 
-const startDrag = (e: DragEvent, payload: TPayload) => {
+const mainRef = shallowRef<HTMLDivElement>();
+
+const draggedEl = shallowRef<HTMLElement>();
+
+type TPayload = Partial<{ index: number; parent_index: number }>;
+
+const startDrag = (e: DragEvent) => {
+  const el = e.target as HTMLElement;
+
   mainRef.value!.classList.add("drag-active");
-
-  (e.target as HTMLElement).classList.add("being-dragged");
-
-  const { index, parent_index } = payload;
+  el.classList.add("being-dragged");
+  draggedEl.value = el;
 
   e.dataTransfer!.dropEffect = "move";
   e.dataTransfer!.effectAllowed = "move";
 
-  e.dataTransfer!.setData("payload", JSON.stringify({ ...payload, is_child: parent_index !== undefined }));
+  e.dataTransfer!.setData(
+    "payload",
+    JSON.stringify({
+      index: Number(el.dataset.index),
+      parent_index: Number(el.dataset.parent_index),
+    })
+  );
 };
 
-const onDrop = (e: DragEvent, payload: TPayload) => {
-  console.log(e.target as HTMLElement);
-  const target_payload = { ...payload, is_child: payload.parent_index !== undefined };
+const onDrop = (e: DragEvent) => {
+  const el = e.target as HTMLElement;
+
+  const target_payload = {
+    index: el.dataset.index ? Number(el.dataset.index) : null,
+    parent_index: el.dataset.parent_index ? Number(el.dataset.parent_index) : null,
+  };
 
   const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
 
   // ***** logic
 
-  if (source_payload.is_child === target_payload.is_child) {
-    console.log(1);
-    if (source_payload.is_child) {
-      let element = data[Number(source_payload.parent_index!)].children!.splice(Number(source_payload.index!), 1)[0];
-      if (!data[Number(target_payload.parent_index!)].children) data[Number(target_payload.parent_index!)].children = [];
-      data[Number(target_payload.parent_index!)].children!.splice(Number(target_payload.index!), 0, element);
+  const is_source_child = source_payload.parent_index != null;
+  const is_target_child = target_payload.parent_index != null;
+
+  if (is_source_child === is_target_child) {
+    if (is_source_child) {
+      let element = data[source_payload.parent_index!].children!.splice(source_payload.index!, 1)[0];
+      if (!data[target_payload.parent_index!].children) data[target_payload.parent_index!].children = [];
+      data[target_payload.parent_index!].children!.splice(target_payload.index!, 0, element);
     } else {
-      const a_i = Number(source_payload.index!);
-      const b_i = Number(target_payload.index!);
+      const a_i = source_payload.index!;
+      const b_i = target_payload.index!;
 
       const element = data.splice(a_i, 1)[0];
 
@@ -128,6 +142,7 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
     reRender.value = Date.now();
   }
 
+  draggedEl.value?.classList.remove("being-dragged");
   mainRef.value!.classList.remove("drag-active");
 };
 </script>
@@ -138,16 +153,16 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
 
     <main :key="reRender" ref="mainRef">
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
-        <item-vue class="parent" @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
+        <item-vue :index="i" @dragstart="startDrag" @drop="onDrop" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
-          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="!data[i].collapsed" @drop="(e) => onDrop(e, { index: 0, parent_index: i })" @dragenter.prevent @dragover.prevent>
-            <item-vue class="child" v-for="(c, j) in children" @dragstart="(e) => startDrag(e, { index: j, parent_index: i })" @drop="(e) => onDrop(e, { index: j, parent_index: i })" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
+          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="!data[i].collapsed" @drop="onDrop" @dragenter.prevent @dragover.prevent>
+            <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" @dragstart="startDrag" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
           </div>
         </Transition>
       </div>
 
-      <div class="uncategorized">
-        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :key="c.id" @drop="(e) => onDrop(e, { index: k, parent_index: 3 })" @dragstart="(e) => startDrag(e, { index: k, parent_index: 3 })" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
+      <div class="uncategorized" @drop="onDrop">
+        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="3" :key="c.id" @dragstart="startDrag" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
       </div>
     </main>
   </div>
@@ -164,7 +179,7 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
       left: 0;
 
       &.border-b {
-        border-bottom: 6px solid $first-blue;
+        border-top: 6px solid $first-blue;
       }
     }
 
