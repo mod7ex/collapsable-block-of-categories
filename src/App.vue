@@ -141,6 +141,7 @@ const onDrop = (e: DragEvent) => {
     }
     reRender.value = Date.now();
   }
+
   // else if (is_source_child && el.classList.contains("uncategorized")) {
   //   let element = data[source_payload.parent_index!].children!.splice(source_payload.index!, 1)[0];
   //   if (!data[data.length - 1].children) data[data.length - 1].children = [];
@@ -162,12 +163,14 @@ const onDrop = (e: DragEvent) => {
         <Transition name="slide-fade">
           <div :class="['children', `h-${children?.length ?? 0}`]" v-if="!data[i].collapsed" @drop="onDrop" @dragenter.prevent @dragover.prevent>
             <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" @dragstart="startDrag" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
+            <item-vue :collapsable="true" v-if="!children?.length" class="child" :index="0" :parent_index="i" :id="uid()" />
           </div>
         </Transition>
       </div>
 
       <div class="uncategorized" @drop="onDrop">
         <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="data.length - 1" :key="c.id" @dragstart="startDrag" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
+        <item-vue :collapsable="true" v-if="!uncategorizedItems.children?.length" class="child" :index="0" :parent_index="data.length - 1" :id="uid()" />
       </div>
     </main>
   </div>
@@ -189,6 +192,8 @@ const onDrop = (e: DragEvent) => {
     }
 
     &.being-dragged {
+      opacity: 0.1;
+
       .actions {
         button.drag {
           img {
@@ -203,10 +208,6 @@ const onDrop = (e: DragEvent) => {
       }
     }
   }
-
-  .being-dragged {
-    opacity: 0.1;
-  }
 }
 
 #container {
@@ -217,8 +218,7 @@ const onDrop = (e: DragEvent) => {
     overflow: hidden;
   }
   .uncategorized {
-    background-color: green;
-    padding: 3em 0;
+    padding: 0;
     margin-top: 1.5em;
   }
 }

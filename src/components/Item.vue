@@ -47,7 +47,7 @@ const leave = (e: DragEvent) => {
 </script>
 
 <template>
-  <div :data-index="index" :data-parent_index="parent_index" class="collapse-item" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
+  <div :data-index="index" :data-parent_index="parent_index" :class="['collapse-item', title ? '' : 'phantom']" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
     <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
       <img src="../assets/svg/collapse-up.svg" alt="collapse" />
     </button>
@@ -83,6 +83,22 @@ const leave = (e: DragEvent) => {
   position: relative;
   @include flex($justify: "flex-start");
   border: 1px solid $second-gray;
+
+  &.phantom {
+    border: none;
+    background-color: rgba($second-gray, 0.3);
+    .actions {
+      display: none;
+    }
+
+    button {
+      &.collapse {
+        img {
+          display: none;
+        }
+      }
+    }
+  }
 
   button {
     &.collapse {
