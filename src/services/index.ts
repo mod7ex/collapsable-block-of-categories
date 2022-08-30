@@ -17,7 +17,7 @@ const eventPayloadGen = (e: DragEvent) => {
 };
 
 export default () => {
-  if (!draggedEl) draggedEl = shallowRef<HTMLElement>();
+  if (!draggedEl) draggedEl = shallowRef();
 
   return { draggedEl, clearMemo, eventPayloadGen };
 };
