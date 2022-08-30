@@ -145,6 +145,10 @@ const leave = (e: DragEvent) => {
         font-size: small;
         color: $first-gray;
         margin-right: 1em;
+
+        &.note {
+          color: $pink;
+        }
       }
 
       .dots {
