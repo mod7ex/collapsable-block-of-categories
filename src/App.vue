@@ -91,19 +91,19 @@ const reRender = ref(0);
 const categories = computed(() => data.filter(({ uncategorized }) => !uncategorized));
 const uncategorizedItems = computed(() => data.filter(({ uncategorized }) => !!uncategorized)[0]);
 
-type TPayload = Partial<{ id: string; parent: string; index: number; parent_index: number; is_child: boolean }>;
+type TPayload = Partial<{ index: number; parent_index: number; is_child: boolean }>;
 
 const startDrag = (e: DragEvent, payload: TPayload) => {
-  const { id, parent, index, parent_index } = payload;
+  const { index, parent_index } = payload;
 
   e.dataTransfer!.dropEffect = "move";
   e.dataTransfer!.effectAllowed = "move";
 
-  e.dataTransfer!.setData("payload", JSON.stringify({ ...payload, is_child: !!parent }));
+  e.dataTransfer!.setData("payload", JSON.stringify({ ...payload, is_child: parent_index !== undefined }));
 };
 
 const onDrop = (e: DragEvent, payload: TPayload) => {
-  const target_payload = { ...payload, is_child: !!payload.parent };
+  const target_payload = { ...payload, is_child: payload.parent_index !== undefined };
 
   const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
 
@@ -112,7 +112,8 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
   if (source_payload.is_child === target_payload.is_child) {
     if (source_payload.is_child) {
       let element = data[Number(source_payload.parent_index!)].children!.splice(Number(source_payload.index!), 1)[0];
-      let b = data[Number(target_payload.parent_index!)].children!.splice(Number(target_payload.index!), 0, element);
+      if (!data[Number(target_payload.parent_index!)].children) data[Number(target_payload.parent_index!)].children = [];
+      data[Number(target_payload.parent_index!)].children!.splice(Number(target_payload.index!), 0, element);
     } else {
       const a_i = Number(source_payload.index!);
       const b_i = Number(target_payload.index!);
@@ -134,36 +135,16 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
 
     <main :key="reRender">
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
-        <item-vue @dragstart="(e) => startDrag(e, { id, index: i })" @drop="(e) => onDrop(e, { id, index: i })" v-model="data[i].collapsed" :collapsable="true" :title="title" :content="content" :note="note" :dots="dots" :id="id" />
+        <item-vue @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :title="title" :content="content" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
-          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="data[i].collapsed">
-            <item-vue
-              v-for="(c, j) in children"
-              @dragstart="(e) => startDrag(e, { parent: id, id: c.id, index: j, parent_index: i })"
-              @drop="(e) => onDrop(e, { parent: id, id: c.id, index: j, parent_index: i })"
-              :key="c.id"
-              :title="c.title"
-              :content="c.content"
-              :note="c.note"
-              :dots="c.dots"
-              :id="c.id"
-            />
+          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="data[i].collapsed" @drop="(e) => onDrop(e, { index: 0, parent_index: i })" @dragenter.prevent @dragover.prevent>
+            <item-vue v-for="(c, j) in children" @dragstart="(e) => startDrag(e, { index: j, parent_index: i })" @drop="(e) => onDrop(e, { index: j, parent_index: i })" :key="c.id" :title="c.title" :content="c.content" :note="c.note" :dots="c.dots" :id="c.id" />
           </div>
         </Transition>
       </div>
 
       <div class="uncategorized">
-        <item-vue
-          v-for="(c, k) in uncategorizedItems.children"
-          :key="c.id"
-          @drop="(e) => onDrop(e, { parent: uncategorizedItems.id, id: c.id, index: k, parent_index: 3 })"
-          @dragstart="(e) => startDrag(e, { parent: uncategorizedItems.id, id: c.id, index: k, parent_index: 3 })"
-          :title="c.title"
-          :content="c.content"
-          :note="c.note"
-          :dots="c.dots"
-          :id="c.id"
-        />
+        <item-vue v-for="(c, k) in uncategorizedItems.children" :key="c.id" @drop="(e) => onDrop(e, { index: k, parent_index: 3 })" @dragstart="(e) => startDrag(e, { index: k, parent_index: 3 })" :title="c.title" :content="c.content" :note="c.note" :dots="c.dots" :id="c.id" />
       </div>
     </main>
   </div>
@@ -176,6 +157,8 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
   .children {
     padding-left: 3em;
     overflow: hidden;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
   }
   .uncategorized {
     padding: 0;
