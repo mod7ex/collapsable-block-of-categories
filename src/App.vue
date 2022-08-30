@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import Draggable from "vuedraggable";
 import { Colors, uidGen } from "./utils";
-import { reactive, computed, shallowRef } from "vue";
+import { reactive, computed, shallowRef, onScopeDispose } from "vue";
 import ItemVue from "./components/Item.vue";
 import TheHeader from "./components/TheHeader.vue";
-
-const searchPayload = shallowRef("Документы");
+import service from "./services";
 
 const uid = uidGen("app");
+
+const { draggedEl, clearMemo, eventPayloadGen } = service();
+
+onScopeDispose(clearMemo);
+
+const searchPayload = shallowRef("Документы");
 
 interface IStructure {
   uncategorized: boolean;
@@ -88,8 +93,6 @@ const reRender = shallowRef(0);
 
 const mainRef = shallowRef<HTMLDivElement>();
 
-const draggedEl = shallowRef<HTMLElement>();
-
 type TPayload = Partial<{ index: number; parent_index: number }>;
 
 const startDrag = (e: DragEvent) => {
@@ -102,26 +105,15 @@ const startDrag = (e: DragEvent) => {
   e.dataTransfer!.dropEffect = "move";
   e.dataTransfer!.effectAllowed = "move";
 
-  e.dataTransfer!.setData(
-    "payload",
-    JSON.stringify({
-      index: Number(el.dataset.index),
-      parent_index: Number(el.dataset.parent_index),
-    })
-  );
+  e.dataTransfer!.setData("payload", JSON.stringify(eventPayloadGen(e)));
 };
 
 const onDrop = (e: DragEvent) => {
   const el = e.target as HTMLElement;
 
-  const target_payload = {
-    index: el.dataset.index ? Number(el.dataset.index) : null,
-    parent_index: el.dataset.parent_index ? Number(el.dataset.parent_index) : null,
-  };
+  const target_payload = eventPayloadGen(e);
 
   const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
-
-  // ***** logic
 
   const is_source_child = source_payload.parent_index != null;
   const is_target_child = target_payload.parent_index != null;
@@ -141,12 +133,6 @@ const onDrop = (e: DragEvent) => {
     }
     reRender.value = Date.now();
   }
-
-  // else if (is_source_child && el.classList.contains("uncategorized")) {
-  //   let element = data[source_payload.parent_index!].children!.splice(source_payload.index!, 1)[0];
-  //   if (!data[data.length - 1].children) data[data.length - 1].children = [];
-  //   data[data.length - 1].children!.splice(0, 0, element);
-  // }
 
   draggedEl.value?.classList.remove("being-dragged");
   mainRef.value!.classList.remove("drag-active");

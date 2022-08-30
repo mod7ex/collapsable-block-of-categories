@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from "vue";
 import { Colors } from "../utils";
+import service from "../services";
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +25,8 @@ const props = withDefaults(
   }
 );
 
+const { draggedEl, eventPayloadGen } = service();
+
 const emit = defineEmits(["update:modelValue"]);
 
 const flipArrow = (e: MouseEvent) => {
@@ -35,9 +38,16 @@ const draggedOverEl = shallowRef<HTMLElement>();
 
 const over = (e: DragEvent) => {
   e.preventDefault();
+
+  const target_payload = eventPayloadGen(e);
   let el = e.target as HTMLElement;
+
+  const is_source_child = !!draggedEl.value?.dataset.parent_index;
+  const is_target_child = !!el.dataset.parent_index;
+
   draggedOverEl.value = el;
-  el.classList.add("border-b");
+
+  if (is_source_child === is_target_child) el.classList.add("border-b");
 };
 
 const leave = (e: DragEvent) => {
