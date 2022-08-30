@@ -161,7 +161,7 @@ const onDrop = (e: DragEvent) => {
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
         <item-vue :index="i" @dragstart="startDrag" @drop="onDrop" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
-          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="!data[i].collapsed" @drop="onDrop" @dragenter.prevent @dragover.prevent>
+          <div :class="['children', `h-${!!children?.length ? children?.length : 1}`]" v-if="!data[i].collapsed" @drop="onDrop" @dragenter.prevent @dragover.prevent>
             <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" @dragstart="startDrag" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
             <item-vue :collapsable="true" v-if="!children?.length" class="child" :index="0" :parent_index="i" :id="uid()" />
           </div>
