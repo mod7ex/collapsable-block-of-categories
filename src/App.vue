@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Draggable from "vuedraggable";
-import { reactive, ref, computed } from "vue";
 import { Colors, uidGen } from "./utils";
+import { reactive, ref, computed } from "vue";
 import ItemVue from "./components/Item.vue";
 import TheHeader from "./components/TheHeader.vue";
 
@@ -104,6 +104,7 @@ const startDrag = (e: DragEvent, payload: TPayload) => {
 };
 
 const onDrop = (e: DragEvent, payload: TPayload) => {
+  console.log((e.target as HTMLElement).classList.contains("children"));
   const target_payload = { ...payload, is_child: payload.parent_index !== undefined };
 
   const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
@@ -111,6 +112,7 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
   // ***** logic
 
   if (source_payload.is_child === target_payload.is_child) {
+    console.log(1);
     if (source_payload.is_child) {
       let element = data[Number(source_payload.parent_index!)].children!.splice(Number(source_payload.index!), 1)[0];
       if (!data[Number(target_payload.parent_index!)].children) data[Number(target_payload.parent_index!)].children = [];
@@ -130,7 +132,7 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
 };
 
 const onOver = (e: DragEvent, payload: TPayload) => {
-  console.log(payload, e.target);
+  // console.log(payload, e.target);
 };
 </script>
 
@@ -142,7 +144,7 @@ const onOver = (e: DragEvent, payload: TPayload) => {
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
         <item-vue class="parent" @dragover="(e) => onOver(e, { index: i })" @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
-          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="data[i].collapsed" @drop="(e) => onDrop(e, { index: 0, parent_index: i })" @dragenter.prevent @dragover.prevent>
+          <div :class="['children', `h-${children?.length ?? 0}`]" v-if="!data[i].collapsed" @drop="(e) => onDrop(e, { index: 0, parent_index: i })" @dragenter.prevent @dragover.prevent>
             <item-vue class="child" v-for="(c, j) in children" @dragstart="(e) => startDrag(e, { index: j, parent_index: i })" @drop="(e) => onDrop(e, { index: j, parent_index: i })" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
           </div>
         </Transition>
