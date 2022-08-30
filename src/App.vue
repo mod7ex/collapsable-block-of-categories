@@ -194,6 +194,10 @@ const onDrop = (e: DragEvent) => {
     &.being-dragged {
       opacity: 0.1;
 
+      & + .children {
+        opacity: 0.1;
+      }
+
       .actions {
         button.drag {
           img {
