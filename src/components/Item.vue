@@ -2,15 +2,26 @@
 import { ref } from "vue";
 import { Colors } from "../utils";
 
-const props = withDefaults(defineProps<{ id?: string | number; title: string; note: string; content: string; dots?: Colors[] | undefined; collapsable?: boolean; modelValue?: boolean }>(), {
-  collapsable: false,
-  title: "",
-  note: "",
-  content: "",
-  dots: undefined,
-  modelValue: true,
-  id: "",
-});
+const props = withDefaults(
+  defineProps<{
+    id?: string | number;
+    title: string;
+    note: string;
+    content: string;
+    dots?: Colors[] | undefined;
+    collapsable?: boolean;
+    modelValue?: boolean;
+  }>(),
+  {
+    collapsable: false,
+    title: "",
+    note: "",
+    content: "",
+    dots: undefined,
+    modelValue: true,
+    id: "",
+  }
+);
 
 const emit = defineEmits(["update:modelValue"]);
 
@@ -18,10 +29,29 @@ const flipArrow = (e: MouseEvent) => {
   emit("update:modelValue", !props.modelValue);
   (e.currentTarget as HTMLButtonElement).classList.toggle("down");
 };
+
+const prevent = (e: DragEvent, allow = true) => {
+  if (allow) e.preventDefault();
+};
+
+const over = (e: DragEvent) => {
+  prevent(e);
+  let el = e.target as HTMLElement;
+  el.classList.add("border-b");
+};
+
+const enter = (e: DragEvent) => {
+  prevent(e);
+};
+
+const leave = (e: DragEvent) => {
+  let el = e.target as HTMLElement;
+  el.classList.remove("border-b");
+};
 </script>
 
 <template>
-  <div class="collapse-item" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover.prevent>
+  <div :class="['collapse-item'].concat($attrs.class)" draggable="true" :id="`${id ?? ''}`" @dragenter="enter" @dragover="over" @dragleave="leave">
     <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
       <img src="../assets/svg/collapse-up.svg" alt="collapse" />
     </button>

@@ -23,14 +23,13 @@ interface IStructure {
 const data = reactive<Partial<IStructure>[]>([
   {
     id: uid(),
-    collapsed: true,
+    collapsed: false,
     title: "Обязательные для всех",
     content: "Документы, обязательные для всех сотрудников без исключения",
     dots: [Colors.PINK, Colors.YELLOW, Colors.ORANGE],
     children: [
       {
         id: uid(),
-        collapsed: true,
         title: "Паспорт",
         note: "Обязательный",
         content: "Для всех",
@@ -38,7 +37,6 @@ const data = reactive<Partial<IStructure>[]>([
       },
       {
         id: uid(),
-        collapsed: true,
         title: "ИНН",
         note: "Обязательный",
         content: "Для всех",
@@ -48,7 +46,7 @@ const data = reactive<Partial<IStructure>[]>([
 
   {
     id: uid(),
-    collapsed: true,
+    collapsed: false,
     title: "Обязательные для трудоустройства",
     content: "Документы, без которых невозможно трудоустройство человека на какую бы то ни было должность в компании вне зависимости от граж",
     children: [],
@@ -56,7 +54,7 @@ const data = reactive<Partial<IStructure>[]>([
 
   {
     id: uid(),
-    collapsed: true,
+    collapsed: false,
     title: "Специальные",
     children: [],
   },
@@ -67,19 +65,16 @@ const data = reactive<Partial<IStructure>[]>([
     children: [
       {
         id: uid(),
-        collapsed: true,
         title: "Тестовое задание кандидата",
         content: "Россия, Белоруссия, Украина, администратор филиала, повар-сушист, повар-пиццмейкер, повар горячего цеха",
       },
       {
         id: uid(),
-        collapsed: true,
         title: "Трудовой договор",
         dots: [Colors.BLUE, Colors.GRAY],
       },
       {
         id: uid(),
-        collapsed: true,
         title: "Мед. книжка",
       },
     ],
@@ -88,12 +83,18 @@ const data = reactive<Partial<IStructure>[]>([
 
 const reRender = ref(0);
 
+const mainRef = ref<HTMLDivElement>();
+
 const categories = computed(() => data.filter(({ uncategorized }) => !uncategorized));
 const uncategorizedItems = computed(() => data.filter(({ uncategorized }) => !!uncategorized)[0]);
 
 type TPayload = Partial<{ index: number; parent_index: number; is_child: boolean }>;
 
 const startDrag = (e: DragEvent, payload: TPayload) => {
+  mainRef.value!.classList.add("drag-active");
+
+  (e.target as HTMLElement).classList.add("being-dragged");
+
   const { index, parent_index } = payload;
 
   e.dataTransfer!.dropEffect = "move";
@@ -121,11 +122,15 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
       const element = data.splice(a_i, 1)[0];
 
       data.splice(b_i, 0, element);
-
-      console.log(b_i, a_i);
     }
     reRender.value = Date.now();
   }
+
+  mainRef.value!.classList.remove("drag-active");
+};
+
+const onOver = (e: DragEvent, payload: TPayload) => {
+  console.log(payload, e.target);
 };
 </script>
 
@@ -133,32 +138,42 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
   <div id="container">
     <the-header v-model="searchPayload" />
 
-    <main :key="reRender">
+    <main :key="reRender" ref="mainRef">
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
-        <item-vue @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :title="title" :content="content" :note="note" :dots="dots" :id="id" />
+        <item-vue class="parent" @dragover="(e) => onOver(e, { index: i })" @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
           <div :class="['children', `h-${children?.length ?? 0}`]" v-if="data[i].collapsed" @drop="(e) => onDrop(e, { index: 0, parent_index: i })" @dragenter.prevent @dragover.prevent>
-            <item-vue v-for="(c, j) in children" @dragstart="(e) => startDrag(e, { index: j, parent_index: i })" @drop="(e) => onDrop(e, { index: j, parent_index: i })" :key="c.id" :title="c.title" :content="c.content" :note="c.note" :dots="c.dots" :id="c.id" />
+            <item-vue class="child" v-for="(c, j) in children" @dragstart="(e) => startDrag(e, { index: j, parent_index: i })" @drop="(e) => onDrop(e, { index: j, parent_index: i })" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
           </div>
         </Transition>
       </div>
 
       <div class="uncategorized">
-        <item-vue v-for="(c, k) in uncategorizedItems.children" :key="c.id" @drop="(e) => onDrop(e, { index: k, parent_index: 3 })" @dragstart="(e) => startDrag(e, { index: k, parent_index: 3 })" :title="c.title" :content="c.content" :note="c.note" :dots="c.dots" :id="c.id" />
+        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :key="c.id" @drop="(e) => onDrop(e, { index: k, parent_index: 3 })" @dragstart="(e) => startDrag(e, { index: k, parent_index: 3 })" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
       </div>
     </main>
   </div>
 </template>
 
 <style lang="scss">
+.drag-active {
+  .collapse-item {
+    &.border-b {
+      border-bottom: 6px solid $first-blue;
+    }
+  }
+
+  .being-dragged {
+    opacity: 0.1;
+  }
+}
+
 #container {
   max-width: $main-width;
   margin: 0 auto;
   .children {
     padding-left: 3em;
     overflow: hidden;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
   }
   .uncategorized {
     padding: 0;
