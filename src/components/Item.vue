@@ -43,7 +43,7 @@ const leave = (e: DragEvent) => {
 </script>
 
 <template>
-  <div :class="['collapse-item'].concat($attrs.class)" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
+  <div class="collapse-item" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
     <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
       <img src="../assets/svg/collapse-up.svg" alt="collapse" />
     </button>
@@ -68,6 +68,7 @@ const leave = (e: DragEvent) => {
         <img class="drag-hide" src="../assets/svg/expand.svg" alt="expand" />
       </button>
     </div>
+    <div :class="['overlay'].concat($attrs.class)"></div>
   </div>
 </template>
 

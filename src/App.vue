@@ -104,7 +104,7 @@ const startDrag = (e: DragEvent, payload: TPayload) => {
 };
 
 const onDrop = (e: DragEvent, payload: TPayload) => {
-  console.log((e.target as HTMLElement).classList.contains("children"));
+  console.log(e.target as HTMLElement);
   const target_payload = { ...payload, is_child: payload.parent_index !== undefined };
 
   const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
@@ -130,10 +130,6 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
 
   mainRef.value!.classList.remove("drag-active");
 };
-
-const onOver = (e: DragEvent, payload: TPayload) => {
-  // console.log(payload, e.target);
-};
 </script>
 
 <template>
@@ -142,7 +138,7 @@ const onOver = (e: DragEvent, payload: TPayload) => {
 
     <main :key="reRender" ref="mainRef">
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
-        <item-vue class="parent" @dragover="(e) => onOver(e, { index: i })" @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
+        <item-vue class="parent" @dragstart="(e) => startDrag(e, { index: i })" @drop="(e) => onDrop(e, { index: i })" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
           <div :class="['children', `h-${children?.length ?? 0}`]" v-if="!data[i].collapsed" @drop="(e) => onDrop(e, { index: 0, parent_index: i })" @dragenter.prevent @dragover.prevent>
             <item-vue class="child" v-for="(c, j) in children" @dragstart="(e) => startDrag(e, { index: j, parent_index: i })" @drop="(e) => onDrop(e, { index: j, parent_index: i })" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
@@ -160,8 +156,16 @@ const onOver = (e: DragEvent, payload: TPayload) => {
 <style lang="scss">
 .drag-active {
   .collapse-item {
-    &.border-b {
-      border-bottom: 6px solid $first-blue;
+    .overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+
+      &.border-b {
+        border-bottom: 6px solid $first-blue;
+      }
     }
 
     &.being-dragged {
