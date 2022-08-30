@@ -161,6 +161,21 @@ const onOver = (e: DragEvent, payload: TPayload) => {
     &.border-b {
       border-bottom: 6px solid $first-blue;
     }
+
+    &.being-dragged {
+      .actions {
+        button.drag {
+          img {
+            &.drag-show {
+              display: inline;
+            }
+            &.drag-hide {
+              display: none;
+            }
+          }
+        }
+      }
+    }
   }
 
   .being-dragged {

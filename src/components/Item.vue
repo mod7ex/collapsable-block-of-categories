@@ -30,18 +30,10 @@ const flipArrow = (e: MouseEvent) => {
   (e.currentTarget as HTMLButtonElement).classList.toggle("down");
 };
 
-const prevent = (e: DragEvent, allow = true) => {
-  if (allow) e.preventDefault();
-};
-
 const over = (e: DragEvent) => {
-  prevent(e);
+  e.preventDefault();
   let el = e.target as HTMLElement;
   el.classList.add("border-b");
-};
-
-const enter = (e: DragEvent) => {
-  prevent(e);
 };
 
 const leave = (e: DragEvent) => {
@@ -51,7 +43,7 @@ const leave = (e: DragEvent) => {
 </script>
 
 <template>
-  <div :class="['collapse-item'].concat($attrs.class)" draggable="true" :id="`${id ?? ''}`" @dragenter="enter" @dragover="over" @dragleave="leave">
+  <div :class="['collapse-item'].concat($attrs.class)" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
     <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
       <img src="../assets/svg/collapse-up.svg" alt="collapse" />
     </button>
@@ -72,8 +64,8 @@ const leave = (e: DragEvent) => {
       <button class="raw-btn"><img src="../assets/svg/edit.svg" alt="edit" /></button>
       <button class="raw-btn"><img src="../assets/svg/drop.svg" alt="drop" /></button>
       <button class="raw-btn drag">
-        <img v-if="false" src="../assets/svg/expand-active.svg" alt="expand" />
-        <img v-else src="../assets/svg/expand.svg" alt="expand" />
+        <img class="drag-show" src="../assets/svg/expand-active.svg" alt="expand" />
+        <img class="drag-hide" src="../assets/svg/expand.svg" alt="expand" />
       </button>
     </div>
   </div>
@@ -149,6 +141,15 @@ const leave = (e: DragEvent) => {
         &:active {
           opacity: 1;
           cursor: grabbing;
+        }
+
+        img {
+          &.drag-show {
+            display: none;
+          }
+          &.drag-hide {
+            display: inline;
+          }
         }
       }
     }
