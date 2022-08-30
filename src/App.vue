@@ -9,6 +9,17 @@ const searchPayload = ref("Документы");
 
 const uid = uidGen("app");
 
+interface IStructure {
+  uncategorized: boolean;
+  collapsed: boolean;
+  id: string;
+  title: string;
+  note?: string;
+  content: string;
+  dots: Colors[];
+  children: Partial<IStructure>[];
+}
+
 const data = reactive<Partial<IStructure>[]>([
   {
     id: uid(),
@@ -100,25 +111,19 @@ const onDrop = (e: DragEvent, payload: TPayload) => {
 
   if (source_payload.is_child === target_payload.is_child) {
     if (source_payload.is_child) {
-      let a = data[Number(source_payload.parent_index!)].children![Number(source_payload.index!)];
-      let b = data[Number(target_payload.parent_index!)].children![Number(target_payload.index!)];
-
-      data[Number(source_payload.parent_index!)].children![Number(source_payload.index!)] = b;
-      data[Number(target_payload.parent_index!)].children![Number(target_payload.index!)] = a;
+      let element = data[Number(source_payload.parent_index!)].children!.splice(Number(source_payload.index!), 1)[0];
+      let b = data[Number(target_payload.parent_index!)].children!.splice(Number(target_payload.index!), 0, element);
     } else {
       const a_i = Number(source_payload.index!);
       const b_i = Number(target_payload.index!);
 
-      let a = data[a_i];
-      let b = data[b_i];
+      const element = data.splice(a_i, 1)[0];
 
-      data[b_i] = a;
-      data[a_i] = b;
+      data.splice(b_i, 0, element);
 
       console.log(b_i, a_i);
-
-      reRender.value = Date.now();
     }
+    reRender.value = Date.now();
   }
 };
 </script>
