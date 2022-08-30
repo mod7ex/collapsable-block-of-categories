@@ -141,6 +141,11 @@ const onDrop = (e: DragEvent) => {
     }
     reRender.value = Date.now();
   }
+  // else if (is_source_child && el.classList.contains("uncategorized")) {
+  //   let element = data[source_payload.parent_index!].children!.splice(source_payload.index!, 1)[0];
+  //   if (!data[data.length - 1].children) data[data.length - 1].children = [];
+  //   data[data.length - 1].children!.splice(0, 0, element);
+  // }
 
   draggedEl.value?.classList.remove("being-dragged");
   mainRef.value!.classList.remove("drag-active");
@@ -162,7 +167,7 @@ const onDrop = (e: DragEvent) => {
       </div>
 
       <div class="uncategorized" @drop="onDrop">
-        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="3" :key="c.id" @dragstart="startDrag" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
+        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="data.length - 1" :key="c.id" @dragstart="startDrag" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
       </div>
     </main>
   </div>
@@ -212,7 +217,8 @@ const onDrop = (e: DragEvent) => {
     overflow: hidden;
   }
   .uncategorized {
-    padding: 0;
+    background-color: green;
+    padding: 3em 0;
     margin-top: 1.5em;
   }
 }
