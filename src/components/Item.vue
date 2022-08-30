@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { shallowRef } from "vue";
 import { Colors } from "../utils";
-import service from "../services";
 
 const props = withDefaults(
   defineProps<{
@@ -25,39 +24,16 @@ const props = withDefaults(
   }
 );
 
-const { draggedEl, eventPayloadGen } = service();
-
 const emit = defineEmits(["update:modelValue"]);
 
 const flipArrow = (e: MouseEvent) => {
   emit("update:modelValue", !props.modelValue);
   (e.currentTarget as HTMLButtonElement).classList.toggle("down");
 };
-
-const draggedOverEl = shallowRef<HTMLElement>();
-
-const over = (e: DragEvent) => {
-  e.preventDefault();
-
-  const target_payload = eventPayloadGen(e);
-  let el = e.target as HTMLElement;
-
-  const is_source_child = !!draggedEl.value?.dataset.parent_index;
-  const is_target_child = !!el.dataset.parent_index;
-
-  draggedOverEl.value = el;
-
-  if (is_source_child === is_target_child) el.classList.add("border-b");
-};
-
-const leave = (e: DragEvent) => {
-  let el = e.target as HTMLElement;
-  draggedOverEl.value?.classList.remove("border-b");
-};
 </script>
 
 <template>
-  <div :data-index="index" :data-parent_index="parent_index" :class="['collapse-item', title ? '' : 'phantom']" draggable="true" :id="`${id ?? ''}`" @dragenter.prevent @dragover="over" @dragleave="leave">
+  <div :data-index="index" :data-parent_index="parent_index" :class="['collapse-item', title ? '' : 'phantom']">
     <button :class="['collapse raw-btn', modelValue ? 'down' : '']" @click="flipArrow" v-if="collapsable">
       <img src="../assets/svg/collapse-up.svg" alt="collapse" />
     </button>
@@ -82,7 +58,6 @@ const leave = (e: DragEvent) => {
         <img class="drag-hide" src="../assets/svg/expand.svg" alt="expand" />
       </button>
     </div>
-    <div @dragenter.prevent @dragover="over" @dragleave="leave" :data-index="index" :data-parent_index="parent_index" :class="['overlay'].concat($attrs.class)"></div>
   </div>
 </template>
 

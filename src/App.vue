@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import Draggable from "vuedraggable";
 import { Colors, uidGen } from "./utils";
-import { reactive, computed, shallowRef, onScopeDispose } from "vue";
+import { reactive, computed, shallowRef } from "vue";
 import ItemVue from "./components/Item.vue";
 import TheHeader from "./components/TheHeader.vue";
-import service from "./services";
 
 const uid = uidGen("app");
-
-const { draggedEl, clearMemo, eventPayloadGen } = service();
-
-onScopeDispose(clearMemo);
 
 const searchPayload = shallowRef("Документы");
 
@@ -88,74 +83,25 @@ const data = reactive<Partial<IStructure>[]>([
 
 const categories = computed(() => data.filter(({ uncategorized }) => !uncategorized));
 const uncategorizedItems = computed(() => data.filter(({ uncategorized }) => !!uncategorized)[0]);
-
-const reRender = shallowRef(0);
-
-const mainRef = shallowRef<HTMLDivElement>();
-
-type TPayload = Partial<{ index: number; parent_index: number }>;
-
-const startDrag = (e: DragEvent) => {
-  const el = e.target as HTMLElement;
-
-  mainRef.value!.classList.add("drag-active");
-  el.classList.add("being-dragged");
-  draggedEl.value = el;
-
-  e.dataTransfer!.dropEffect = "move";
-  e.dataTransfer!.effectAllowed = "move";
-
-  e.dataTransfer!.setData("payload", JSON.stringify(eventPayloadGen(e)));
-};
-
-const onDrop = (e: DragEvent) => {
-  const el = e.target as HTMLElement;
-
-  const target_payload = eventPayloadGen(e);
-
-  const source_payload: TPayload = JSON.parse(e.dataTransfer?.getData("payload") ?? "{}");
-
-  const is_source_child = source_payload.parent_index != null;
-  const is_target_child = target_payload.parent_index != null;
-
-  if (is_source_child === is_target_child) {
-    if (is_source_child) {
-      let element = data[source_payload.parent_index!].children!.splice(source_payload.index!, 1)[0];
-      if (!data[target_payload.parent_index!].children) data[target_payload.parent_index!].children = [];
-      data[target_payload.parent_index!].children!.splice(target_payload.index!, 0, element);
-    } else {
-      const a_i = source_payload.index!;
-      const b_i = target_payload.index!;
-
-      const element = data.splice(a_i, 1)[0];
-
-      data.splice(b_i, 0, element);
-    }
-    reRender.value = Date.now();
-  }
-
-  draggedEl.value?.classList.remove("being-dragged");
-  mainRef.value!.classList.remove("drag-active");
-};
 </script>
 
 <template>
   <div id="container">
     <the-header v-model="searchPayload" />
 
-    <main :key="reRender" ref="mainRef">
+    <main>
       <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
-        <item-vue :index="i" @dragstart="startDrag" @drop="onDrop" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
+        <item-vue :index="i" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
         <Transition name="slide-fade">
-          <div :class="['children', `h-${!!children?.length ? children?.length : 1}`]" v-if="!data[i].collapsed" @drop="onDrop" @dragenter.prevent @dragover.prevent>
-            <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" @dragstart="startDrag" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
+          <div :class="['children', `h-${!!children?.length ? children?.length : 1}`]" v-if="!data[i].collapsed" @dragenter.prevent @dragover.prevent>
+            <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
             <item-vue :collapsable="true" v-if="!children?.length" class="child" :index="0" :parent_index="i" :id="uid()" />
           </div>
         </Transition>
       </div>
 
-      <div class="uncategorized" @drop="onDrop">
-        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="data.length - 1" :key="c.id" @dragstart="startDrag" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
+      <div class="uncategorized">
+        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="data.length - 1" :key="c.id" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
         <item-vue :collapsable="true" v-if="!uncategorizedItems.children?.length" class="child" :index="0" :parent_index="data.length - 1" :id="uid()" />
       </div>
     </main>
