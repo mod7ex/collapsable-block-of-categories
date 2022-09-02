@@ -89,76 +89,39 @@ const uncategorizedItems = computed(() => data.filter(({ uncategorized }) => !!u
   <div id="container">
     <the-header v-model="searchPayload" />
 
-    <main>
-      <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
-        <item-vue :index="i" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
-        <Transition name="slide-fade">
-          <div :class="['children', `h-${!!children?.length ? children?.length : 1}`]" v-if="!data[i].collapsed" @dragenter.prevent @dragover.prevent>
-            <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
-            <item-vue :collapsable="true" v-if="!children?.length" class="child" :index="0" :parent_index="i" :id="uid()" />
-          </div>
-        </Transition>
-      </div>
+    <div v-for="({ title, content, note, dots, id, children }, i) in categories" :key="id">
+      <item-vue :index="i" v-model="data[i].collapsed" :collapsable="true" :content="content" :title="title" :note="note" :dots="dots" :id="id" />
+      <Transition name="slide-fade">
+        <div :class="['children', `h-${!!children?.length ? children?.length : 1}`]" v-if="!data[i].collapsed" @dragenter.prevent @dragover.prevent>
+          <item-vue class="child" v-for="(c, j) in children" :index="j" :parent_index="i" :content="c.content" :title="c.title" :note="c.note" :dots="c.dots" :key="c.id" :id="c.id" />
+          <item-vue :collapsable="true" v-if="!children?.length" class="child" :index="0" :parent_index="i" :id="uid()" />
+        </div>
+      </Transition>
+    </div>
 
-      <div class="uncategorized">
-        <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="data.length - 1" :key="c.id" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
-        <item-vue :collapsable="true" v-if="!uncategorizedItems.children?.length" class="child" :index="0" :parent_index="data.length - 1" :id="uid()" />
-      </div>
-    </main>
+    <div class="uncategorized">
+      <item-vue class="child" v-for="(c, k) in uncategorizedItems.children" :index="k" :parent_index="data.length - 1" :key="c.id" :content="c.content" :title="c.title" :dots="c.dots" :note="c.note" :id="c.id" />
+      <item-vue :collapsable="true" v-if="!uncategorizedItems.children?.length" class="child" :index="0" :parent_index="data.length - 1" :id="uid()" />
+    </div>
   </div>
 </template>
 
 <style lang="scss">
-.drag-active {
-  .collapse-item {
-    .overlay {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      left: 0;
-
-      &.border-b {
-        border-top: 6px solid $first-blue;
-      }
-    }
-
-    &.being-dragged {
-      opacity: 0.1;
-
-      & + .children {
-        opacity: 0.1;
-      }
-
-      .actions {
-        button.drag {
-          img {
-            &.drag-show {
-              display: inline;
-            }
-            &.drag-hide {
-              display: none;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 #container {
   max-width: $main-width;
   margin: 0 auto;
   .children {
     padding-left: 3em;
-    overflow: hidden;
+    // overflow: hidden;
   }
   .uncategorized {
     padding: 0;
     margin-top: 1.5em;
   }
 }
+
 // *************************Transition
+
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }

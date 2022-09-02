@@ -9,10 +9,10 @@
 
 $columns: 20;
 
-@mixin items {
+@mixin items($dim: 3rem) {
   @for $i from 1 through $columns {
     &.h-#{$i} {
-      height: $i * 3rem;
+      height: $i * $dim;
     }
   }
 }
