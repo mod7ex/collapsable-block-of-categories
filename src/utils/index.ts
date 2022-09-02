@@ -7,11 +7,24 @@ export enum Colors {
   GRAY = "8E9CBB",
 }
 
-export const uidGen = (str: string = "") => {
-  let i = 0;
+// export const uidGen = (str: string = "") => {
+//   let i = 0;
 
-  return () => {
-    i++;
-    return `${Date.now()}-${i}-${str}`;
-  };
+//   return () => {
+//     i++;
+//     return `${Date.now()}-${i}-${str}`;
+//   };
+// };
+
+export const uidGen = (str = "") => {
+  const _uidGen = (function* () {
+    let i = 0;
+
+    while (true) {
+      i++;
+      yield `${Date.now()}-${i}-${str}`;
+    }
+  })();
+
+  return () => _uidGen.next().value;
 };
